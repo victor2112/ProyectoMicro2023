@@ -27,9 +27,22 @@ static uint32_t registers[REGISTERS_NUM];
 
 // Register Modify
 void registerModify();
-char *register_modify;
-char *register_content;
-extern void updateLoadResgister(int register_modify, uint32_t register_content);
+char *register_number;
+unsigned long register_content;
+static char *endptr;
+extern void updateR0(unsigned long register_content);
+extern void updateR1(unsigned long register_content);
+extern void updateR2(unsigned long register_content);
+extern void updateR3(unsigned long register_content);
+extern void updateR4(unsigned long register_content);
+extern void updateR5(unsigned long register_content);
+extern void updateR6(unsigned long register_content);
+extern void updateR7(unsigned long register_content);
+extern void updateR8(unsigned long register_content);
+extern void updateR9(unsigned long register_content);
+extern void updateR10(unsigned long register_content);
+extern void updateR11(unsigned long register_content);
+extern void updateR12(unsigned long register_content);
 
 int main(void){
 	
@@ -67,10 +80,10 @@ void USART2_IRQHandler(void){
 				token = strtok(NULL, " ");
 				if (token != NULL) {
 					args[arguments_iterator] = token;
-					USART_putString("\n\r\n\r token ");
-					USART_putString((char *) &arguments_iterator);
-					USART_putString(" ");
-					USART_putString(token);
+					//USART_putString("\n\r\n\r token ");
+					//USART_putString((char *) &arguments_iterator);
+					//USART_putString(" ");
+					//USART_putString(token);
 					arguments_iterator++;
 				}
 				
@@ -144,11 +157,12 @@ void registerDisplay(){
 	} else {
 		loadResgistersContent(registers);
 		int i = 0;
-		for (i = 0; i <= REGISTERS_NUM; i++){
+		for (i = 0; i < REGISTERS_NUM; i++){
 			sprintf(buffer, " R%d = 0x%08x", i, registers[i]);
 			USART_putString(buffer);
 			USART_putString("\n\r");
 		}
+		
 	}
 	USART_putString("\n\r");
 }
@@ -158,26 +172,69 @@ void registerModify(){
 	if ((strcmp(args[2], " ") != 0)) { // Verificar que no existan mas de 2 argumentos
 		USART_putString("\n\r\n\r Too many arguments\n\r");
 	} else {
-		register_modify = strtok(args[0], "R");
-		register_content = strtok(args[1], "0x");
-		sprintf(buffer, " R%s = 0x%s", register_modify, register_content);
-		//sprintf(buffer, " R%s = 0x %08x", register_modify, register_content);
+		
+		register_number = strtok(args[0], "R");
+		register_content = strtoul(strtok(args[1], "0x"), &endptr, 16);
+		
+		sprintf(buffer, " R%s = 0x%08x", register_number, (int) register_content);
 		USART_putString(buffer);
 		
-		
-		
-		loadResgistersContent(registers);
-		sprintf(buffer, " R%s = 0x%08x", register_modify, registers[(int) register_modify]);
-		USART_putString(buffer);
-		
-		/*
-		register_modify = (uint32_t) args[0];
-		updateLoadResgister(register_modify, register_content);
-		sprintf(buffer, " %s = 0x%08x", args[0], register_content);
-		USART_putString(buffer);
-		
-		*/
-		
+		if ((strcmp(register_number, "0") == 0))
+		{
+			updateR0(register_content);
+		}
+		else if ((strcmp(register_number, "1") == 0))
+		{
+			updateR1(register_content);
+		}
+		else if ((strcmp(register_number, "2") == 0))
+		{
+			updateR2(register_content);
+		}
+		else if ((strcmp(register_number, "3") == 0))
+		{
+			updateR3(register_content);
+		} 
+		else if ((strcmp(register_number, "4") == 0))
+		{
+			updateR4(register_content);
+		}
+		else if ((strcmp(register_number, "5") == 0))
+		{
+			updateR5(register_content);
+		}
+		else if ((strcmp(register_number, "6") == 0))
+		{
+			updateR6(register_content);
+		}
+		else if ((strcmp(register_number, "7") == 0))
+		{
+			updateR7(register_content);
+		} 
+		else if ((strcmp(register_number, "8") == 0))
+		{
+			updateR8(register_content);
+		}
+		else if ((strcmp(register_number, "9") == 0))
+		{
+			updateR9(register_content);
+		}
+		else if ((strcmp(register_number, "10") == 0))
+		{
+			updateR10(register_content);
+		}
+		else if ((strcmp(register_number, "11") == 0))
+		{
+			updateR11(register_content);
+		} 
+		else if ((strcmp(register_number, "12") == 0))
+		{
+			updateR12(register_content);
+		}
+		else
+		{
+			USART_putString("\n\r\n\r Register number invalid\n\r");
+		}
 		
 	}
 	USART_putString("\n\r");
