@@ -10,4 +10,4 @@
   C:\Keil_v5\ARM\ARMCLANG\Bin\..\include\string.h \
   C:\Keil_v5\ARM\ARMCLANG\Bin\..\include\stdio.h \
   C:\Keil_v5\ARM\ARMCLANG\Bin\..\include\stdlib.h usart_utils.h utils.h \
-  commands.h assembler_functions.h
+  commands.h assembler_functions.h call.h

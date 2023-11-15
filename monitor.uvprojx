@@ -420,14 +420,19 @@
               <FilePath>.\usart_utils.h</FilePath>
             </File>
             <File>
-              <FileName>utils.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\utils.c</FilePath>
-            </File>
-            <File>
               <FileName>utils.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\utils.h</FilePath>
+            </File>
+            <File>
+              <FileName>call.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\call.s</FilePath>
+            </File>
+            <File>
+              <FileName>call.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\call.h</FilePath>
             </File>
           </Files>
         </Group>
