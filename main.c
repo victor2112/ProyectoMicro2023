@@ -279,11 +279,14 @@ void registerModify()
 void memoryDisplay(void)
 {
 	USART_putString("\n\r\n\r Executing Memory Display...\n\r\n\r");
-	if ((strcmp(args[2], " ") != 0))
-	{ // Verificar que no existan mas de 2 argumentos
+	if ((strcmp(args[3], " ") != 0))
+	{ // Verificar que no existan mas de 3 argumentos
 		USART_putString("\n\r\n\r Too many arguments\n\r");
 		return;
 	}
+
+	start = args[1];
+	end = args[2];
 
 	// Si no se especifican start y end, usar el rango predeterminado
 	if (start == NULL || end == NULL)
@@ -330,14 +333,14 @@ void memoryDisplay(void)
 void memoryModify()
 {
 	USART_putString("\n\r\n\r Executing Memory Modify...\n\r\n\r");
-	if ((strcmp(args[3], " ") != 0))
-	{ // Verificar que no existan mas de 3 argumentos
+	if ((strcmp(args[4], " ") != 0))
+	{ // Verificar que no existan mas de 4 argumentos
 		USART_putString("\n\r\n\r Too many arguments\n\r");
 	}
 
-	memory_modify_addr = command_line[1];
-	memory_modify_data = command_line[2];
-	memory_modify_size = command_line[3];
+	memory_modify_addr = args[1];
+	memory_modify_data = args[2];
+	memory_modify_size = args[3];
 
 	// TODO
 	return;
