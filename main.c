@@ -41,7 +41,7 @@ unsigned long start_memory_display;
 unsigned long end_memory_display;
 static uint32_t memory_range_blocks;
 uint32_t *display_memory;
-char arr_display_memory[32];
+char arr_display_memory[64];
 
 // Memory Modify
 void memoryModify();
@@ -289,14 +289,19 @@ void memoryDisplay(void)
 	end = args[1];
 
 	// Si no se especifican start y end, usar el rango predeterminado
-	if (start == NULL || end == NULL)
+	if (strlen(start) == 0 || strlen(end) == 0)
 	{
-		start = "0x00000000";
-		end = "0xFFFFFFFF";
+		USART_putString("IF: ");
+		start = "0x08000000";
+		end = "0x08000004";
 	}
 
-	start = strtok(start, "x");
-	end = strtok(end, "x");
+	USART_putString("Start Address: ");
+	USART_putString(start);
+	USART_putString("\n\r");
+	USART_putString("End Address: ");
+	USART_putString(end);
+	USART_putString("\n\r\n\r");
 
 	// Convertir HEX a sin signo
 	start_memory_display = strtoul(start, &pointer, 16);
@@ -313,6 +318,9 @@ void memoryDisplay(void)
 		USART_putString("Error: Memory allocation failed\n\r");
 		return;
 	}
+
+	// Llenar el arreglo con datos de la memoria
+	memoryDisplayAss(display_memory, start_memory_display, end_memory_display);
 
 	// Print de contenido de la memoria
 	uint32_t addr;
