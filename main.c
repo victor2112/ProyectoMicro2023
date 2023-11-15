@@ -43,6 +43,13 @@ static uint32_t memory_range_blocks;
 uint32_t *display_memory;
 char arr_display_memory[32];
 
+// Memory Modify
+void memoryModify();
+static char *memory_modify_addr;
+static char *memory_modify_data;
+static char *memory_modify_size;
+int size_memory = 4;
+
 int main(void)
 {
 
@@ -114,6 +121,10 @@ void USART2_IRQHandler(void)
 				else if ((strcmp(instruction, MEMORY_DISPLAY_COMMAND) == 0))
 				{
 					memoryDisplay();
+				}
+				else if ((strcmp(instruction, MEMORY_MODIFY_COMMAND) == 0))
+				{
+					memoryModify();
 				}
 				else
 				{
@@ -199,7 +210,6 @@ void registerModify()
 	}
 	else
 	{
-
 		register_number = strtok(args[0], "R");
 		register_content = strtoul(strtok(args[1], "0x"), &endptr, 16);
 
@@ -272,48 +282,63 @@ void memoryDisplay(void)
 	if ((strcmp(args[2], " ") != 0))
 	{ // Verificar que no existan mas de 2 argumentos
 		USART_putString("\n\r\n\r Too many arguments\n\r");
+		return;
+	}
+
+	// Si no se especifican start y end, usar el rango predeterminado
+	if (start == NULL || end == NULL)
+	{
+		start = "0x00000000";
+		end = "0xFFFFFFFF";
 	}
 	else
 	{
-		// Si no se especifican start y end, usar el rango predeterminado
-		if (start == NULL || end == NULL)
-		{
-			start = "0x00000000";
-			end = "0xFFFFFFFF";
-		}
-		else
-		{
-			removeChar(start, 'x');
-			removeChar(end, 'x');
-		}
-
-		// Convertir HEX a sin signo
-		start_memory_display = strtoul(start, &pointer, 16);
-		end_memory_display = strtoul(end, &pointer, 16);
-
-		// Calcular espacio necesario para guardar el rango de direcciones. Bloques de 4 bytes
-		memory_range_blocks = ((end_long_memory_display - start_long_memory_display) / 4) + 1;
-
-		// Reservar memoria
-		display_memory = (uint32_t *)malloc(sizeof(uint32_t) * memory_range_blocks);
-
-		if (display_memory == NULL)
-		{
-			USART2_putSTring("Error: Memory allocation failed\n\r");
-			return;
-		}
-
-		// Llenar el arreglo con datos de la memoria
-		memoryDisplayAss(display_memory, start_memory_display, end_memory_display);
-
-		// Print de contenido de la memoria
-		for (uint32_t addr = start_memory_display; addr <= end_memory_display; addr += 4)
-		{
-			sprintf(arr_display_memory, "0x%08x\n\r", *((uint32_t *)addr));
-			USART2_putSTring(arr_display_memory);
-		}
-
-		// Liberar memoria
-		free(display_memory);
+		removeChar(start, 'x');
+		removeChar(end, 'x');
 	}
+
+	// Convertir HEX a sin signo
+	start_memory_display = strtoul(start, &pointer, 16);
+	end_memory_display = strtoul(end, &pointer, 16);
+
+	// Calcular espacio necesario para guardar el rango de direcciones. Bloques de 4 bytes
+	memory_range_blocks = ((end_memory_display - start_memory_display) / 4) + 1;
+
+	// Reservar memoria
+	display_memory = (uint32_t *)malloc(sizeof(uint32_t) * memory_range_blocks);
+
+	if (display_memory == NULL)
+	{
+		USART2_putSTring("Error: Memory allocation failed\n\r");
+		return;
+	}
+
+	// Llenar el arreglo con datos de la memoria
+	memoryDisplayAss(display_memory, start_memory_display, end_memory_display);
+
+	// Print de contenido de la memoria
+	for (uint32_t addr = start_memory_display; addr <= end_memory_display; addr += 4)
+	{
+		sprintf(arr_display_memory, "0x%08x\n\r", *((uint32_t *)addr));
+		USART2_putSTring(arr_display_memory);
+	}
+
+	// Liberar memoria
+	free(display_memory);
+}
+
+void memoryModify()
+{
+	USART_putString("\n\r\n\r Executing Memory Modify...\n\r\n\r");
+	if ((strcmp(args[3], " ") != 0))
+	{ // Verificar que no existan mas de 3 argumentos
+		USART_putString("\n\r\n\r Too many arguments\n\r");
+	}
+
+	memory_modify_addr = command_line[1];
+	memory_modify_data = command_line[2];
+	memory_modify_size = command_line[3];
+
+	// TODO
+	return;
 }
