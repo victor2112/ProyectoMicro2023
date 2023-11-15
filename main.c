@@ -41,9 +41,7 @@ unsigned long start_memory_display;
 unsigned long end_memory_display;
 static uint32_t memory_range_blocks;
 uint32_t *display_memory;
-uint32_t *memcopy_memory_display;
 char arr_display_memory[32];
-int index_memory_display = 0;
 
 // Memory Modify
 void memoryModify();
@@ -278,48 +276,56 @@ void registerModify()
 	USART_putString("\n\r");
 }
 
-void memoryDisplay()
+void memoryDisplay(void)
 {
-
 	USART_putString("\n\r\n\r Executing Memory Display...\n\r\n\r");
 	if ((strcmp(args[2], " ") != 0))
 	{ // Verificar que no existan mas de 2 argumentos
 		USART_putString("\n\r\n\r Too many arguments\n\r");
 		return;
 	}
+
 	start = args[0];
 	end = args[1];
 
-	start = strtok(start, "x");
-	start_memory_display = strtoul(start, &pointer, 16);
+	// Si no se especifican start y end, usar el rango predeterminado
+	if (start == NULL || end == NULL)
+	{
+		start = "0x00000000";
+		end = "0xFFFFFFFF";
+	}
 
+	start = strtok(start, "x");
 	end = strtok(end, "x");
+
+	// Convertir HEX a sin signo
+	start_memory_display = strtoul(start, &pointer, 16);
 	end_memory_display = strtoul(end, &pointer, 16);
 
-	start_memory_display = start_memory_display;
-	end_memory_display = end_memory_display;
-
-	// Establecer tamaño del arreglo
+	// Calcular espacio necesario para guardar el rango de direcciones. Bloques de 4 bytes
 	memory_range_blocks = ((end_memory_display - start_memory_display) / 4) + 1;
 
 	// Reservar memoria
 	display_memory = (uint32_t *)malloc(sizeof(uint32_t) * memory_range_blocks);
-	memcopy_memory_display = display_memory;
 
-	// r0, r1, r2
-	memoryDisplayAssembler(display_memory, start_memory_display, end_memory_display);
-
-	// Imprimir (printf)
-	while (start_memory_display <= end_memory_display)
+	if (display_memory == NULL)
 	{
-		sprintf(arr_display_memory, "0x%08x", memoria_memory_display[index_memory_display]);
-		USART2_putSTring(arr_display_memory);
-		USART2_putSTring("\n\r");
-		index_memory_display++;
-		start_memory_display += 0x4;
+		USART_putString("Error: Memory allocation failed\n\r");
+		return;
 	}
+
+	// Print de contenido de la memoria
+	uint32_t addr;
+	for (addr = start_memory_display; addr <= end_memory_display; addr += 4)
+	{
+		uint32_t value = *((uint32_t *)addr);
+
+		sprintf(arr_display_memory, "Address 0x%08x: 0x%08x\n\r", addr, value);
+		USART_putString(arr_display_memory);
+	}
+
 	// Liberar memoria
-	free(memcopy_memory_display);
+	free(display_memory);
 }
 
 void memoryModify()
