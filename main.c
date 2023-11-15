@@ -1,18 +1,22 @@
-#include "stm32f3xx.h"                  // Device header
+#include "stm32f3xx.h" // Device header
 
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-char buffer[64];
-char error_flag = 0;
+#include "usart_utils.h"
+#include "utils.h"
+#include "commands.h"
 
-// USART con interrupciones 
+#include "assembler_functions.h"
+
+char buffer[MAX_COMMAND_LENGTH];
+char error_flag = 0;
+static char *pointer;
+
+// USART con interrupciones
 volatile char data;
-void USART_config(uint32_t baudrate);
-void USART_Send(char c);
-void USART_putString(char * string);
-char command[64];
+char command[MAX_COMMAND_LENGTH];
 char *character;
 char *instruction;
 char *args[] = {" ", " ", " ", " "};
@@ -21,164 +25,187 @@ int characters_iterator = 0;
 
 // Register Display
 void registerDisplay();
-extern void loadResgistersContent(uint32_t *registers);
-#define REGISTERS_NUM 15
-static uint32_t registers[REGISTERS_NUM];	
+static uint32_t registers[REGISTERS_NUM];
 
 // Register Modify
 void registerModify();
 char *register_number;
 unsigned long register_content;
 static char *endptr;
-extern void updateR0(unsigned long register_content);
-extern void updateR1(unsigned long register_content);
-extern void updateR2(unsigned long register_content);
-extern void updateR3(unsigned long register_content);
-extern void updateR4(unsigned long register_content);
-extern void updateR5(unsigned long register_content);
-extern void updateR6(unsigned long register_content);
-extern void updateR7(unsigned long register_content);
-extern void updateR8(unsigned long register_content);
-extern void updateR9(unsigned long register_content);
-extern void updateR10(unsigned long register_content);
-extern void updateR11(unsigned long register_content);
-extern void updateR12(unsigned long register_content);
 
-int main(void){
-	
+// Memory Display
+void memoryDisplay();
+static char *start;
+static char *end;
+unsigned long start_memory_display;
+unsigned long end_memory_display;
+static uint32_t memory_range_blocks;
+uint32_t *display_memory;
+char arr_display_memory[32];
+
+int main(void)
+{
+
 	USART_config(115200);
-	
+
 	USART_putString("\n\r               Microprocesadores 2023                  \n\r");
-	USART_putString("                 Programa Monitor                  \n\r");
-	USART_putString("                   Victor Amado                  \n\r");
-	USART_putString("                  Cruz Ambrocio                  \n\r");
-	USART_putString("                 Christian Osorio                  \n\r");
-	USART_putString("                  Celeste Batres                  \n\r\n\r");
+	USART_putString("                     Programa Monitor                      \n\r");
+	USART_putString("                      Victor Amado                         \n\r");
+	USART_putString("                      Cruz Ambrocio                        \n\r");
+	USART_putString("                     Christian Osorio                      \n\r");
+	USART_putString("                      Celeste Batres                   \n\r\n\r");
 	USART_putString(">> ");
-	
- 	while(1){
+
+	while (1)
+	{
 	}
 }
 
+void USART2_IRQHandler(void)
+{
+	if (USART2->ISR & USART_ISR_RXNE)
+	{
 
-	
-void USART2_IRQHandler(void){
-	if (USART2->ISR & USART_ISR_RXNE) {
-	
 		data = USART2->RDR;
-		if (data != '\r') {// Esperamos hasta obtener un enter es decir una linea
+		if (data != '\r')
+		{ // Esperamos hasta obtener un enter es decir una linea
 			command[characters_iterator] = USART2->RDR;
 			character = &command[characters_iterator];
-			USART_putString( character ); // Se escribe en pantalla lo que se esta recibiendo
+			USART_putString(character); // Se escribe en pantalla lo que se esta recibiendo
 			characters_iterator++;
-		} else {
+		}
+		else
+		{
 			command[characters_iterator] = '\0';
 			instruction = strtok(command, " ");
 			token = instruction;
 			int arguments_iterator = 0;
-			while( token != NULL) {
+			while (token != NULL)
+			{
 				token = strtok(NULL, " ");
-				if (token != NULL) {
+				if (token != NULL)
+				{
 					args[arguments_iterator] = token;
-					//USART_putString("\n\r\n\r token ");
-					//USART_putString((char *) &arguments_iterator);
-					//USART_putString(" ");
-					//USART_putString(token);
+					// USART_putString("\n\r\n\r token ");
+					// USART_putString((char *) &arguments_iterator);
+					// USART_putString(" ");
+					// USART_putString(token);
 					arguments_iterator++;
 				}
-				
-				if (arguments_iterator>4){ // Verificar que no se reciban mas de 4 argumentos
+
+				if (arguments_iterator > 4)
+				{ // Verificar que no se reciban mas de 4 argumentos
 					USART_putString("\n\r\n\r Too many arguments\n\r");
 					error_flag = 1;
 					token = NULL;
 				}
 			}
-			
-			
-			if (error_flag!=1){
-				if ((strcmp(instruction, "RD") == 0)) {
+
+			if (error_flag != 1)
+			{
+				if ((strcmp(instruction, REGISTER_DISPLAY_COMMAND) == 0))
+				{
 					registerDisplay();
-				} else if ((strcmp(instruction, "RM") == 0)) {
+				}
+				else if ((strcmp(instruction, REGISTER_MODIFY_COMMAND) == 0))
+				{
 					registerModify();
-				} else {
+				}
+				else if ((strcmp(instruction, MEMORY_DISPLAY_COMMAND) == 0))
+				{
+					memoryDisplay();
+				}
+				else
+				{
 					USART_putString("\n\r\n\r");
 					USART_putString(instruction);
 				}
-			} 
-			
-			
-			USART_putString("\n\r"); 
-			USART_putString(">> "); 
+			}
+
+			USART_putString("\n\r");
+			USART_putString(">> ");
 			memset(command, 0, 64); // lipiamos la variable de la linea de comando
 			args[0] = " ";
 			args[1] = " ";
 			args[2] = " ";
 			args[3] = " ";
-			characters_iterator=0; // reiniciamos el iterador de la linea de comando
+			characters_iterator = 0; // reiniciamos el iterador de la linea de comando
 			error_flag = 0;
 		}
 		USART2->ISR |= USART_ISR_RXNE;
 	}
 }
 
+void USART_config(uint32_t baudrate)
+{
+	RCC->AHBENR |= RCC_AHBENR_GPIOAEN;	  // Clock Enbale GPIOA
+	RCC->APB1ENR |= RCC_APB1ENR_USART2EN; // Clock Enbale USART2
 
-void USART_config(uint32_t baudrate){
-	RCC->AHBENR |= RCC_AHBENR_GPIOAEN;						//Clock Enbale GPIOA
-	RCC->APB1ENR |= RCC_APB1ENR_USART2EN;					//Clock Enbale USART2
+	GPIOA->MODER |= (0x02 << 4) | (0x02 << 6); // Alternate Function PA2 & PA15
+	GPIOA->AFR[0] |= (0x07 << 8);			   // PA2 as TX2
+	GPIOA->AFR[0] |= (0x07 << 12);			   // PA15 as RX2
 
-	GPIOA->MODER |= (0x02<<4) | (0x02<<6);				//Alternate Function PA2 & PA15
-	GPIOA->AFR[0] |= (0x07<<8);									  //PA2 as TX2
-	GPIOA->AFR[0] |= (0x07<<12);									//PA15 as RX2
-	
-	USART2->BRR = (uint32_t)(SystemCoreClock/baudrate);  //round( 8MHz/115200)
-	USART2->CR1 |= USART_CR1_TE + USART_CR1_RE;					// Habiliar recepcion y transmision
-	USART2->CR1 |= USART_CR1_RXNEIE;										// Interrupci?n recepcion
-	USART2->CR1 |= USART_CR1_UE;												// Habilitar modulo UART (puerto serial)
-	
+	USART2->BRR = (uint32_t)(SystemCoreClock / baudrate); // round( 8MHz/115200)
+	USART2->CR1 |= USART_CR1_TE + USART_CR1_RE;			  // Habiliar recepcion y transmision
+	USART2->CR1 |= USART_CR1_RXNEIE;					  // Interrupci?n recepcion
+	USART2->CR1 |= USART_CR1_UE;						  // Habilitar modulo UART (puerto serial)
+
 	NVIC_EnableIRQ(USART2_IRQn);
 }
 
-void USART_Send(char c){
-	while(!(USART2->ISR & USART_ISR_TC));
+void USART_Send(char c)
+{
+	while (!(USART2->ISR & USART_ISR_TC))
+		;
 	USART2->TDR = c;
 }
 
-void USART_putString(char * string){
-	while(*string){
+void USART_putString(char *string)
+{
+	while (*string)
+	{
 		USART_Send(*string);
 		string++;
 	}
 }
 
-void registerDisplay(){
+void registerDisplay()
+{
 	USART_putString("\n\r\n\r Executing Register Display...\n\r\n\r");
-	if ((strcmp(args[0], " ") != 0)) {
+	if ((strcmp(args[0], " ") != 0))
+	{
 		USART_putString("\n\r\n\r Too many arguments\n\r"); // Verificar que no existan argumentos
-	} else {
+	}
+	else
+	{
 		loadResgistersContent(registers);
 		int i = 0;
-		for (i = 0; i < REGISTERS_NUM; i++){
+		for (i = 0; i < REGISTERS_NUM; i++)
+		{
 			sprintf(buffer, " R%d = 0x%08x", i, registers[i]);
 			USART_putString(buffer);
 			USART_putString("\n\r");
 		}
-		
 	}
 	USART_putString("\n\r");
 }
 
-void registerModify(){
+void registerModify()
+{
 	USART_putString("\n\r\n\r Executing Register Modify...\n\r\n\r");
-	if ((strcmp(args[2], " ") != 0)) { // Verificar que no existan mas de 2 argumentos
+	if ((strcmp(args[2], " ") != 0))
+	{ // Verificar que no existan mas de 2 argumentos
 		USART_putString("\n\r\n\r Too many arguments\n\r");
-	} else {
-		
+	}
+	else
+	{
+
 		register_number = strtok(args[0], "R");
 		register_content = strtoul(strtok(args[1], "0x"), &endptr, 16);
-		
-		sprintf(buffer, " R%s = 0x%08x", register_number, (int) register_content);
+
+		sprintf(buffer, " R%s = 0x%08x", register_number, (int)register_content);
 		USART_putString(buffer);
-		
+
 		if ((strcmp(register_number, "0") == 0))
 		{
 			updateR0(register_content);
@@ -194,7 +221,7 @@ void registerModify(){
 		else if ((strcmp(register_number, "3") == 0))
 		{
 			updateR3(register_content);
-		} 
+		}
 		else if ((strcmp(register_number, "4") == 0))
 		{
 			updateR4(register_content);
@@ -210,7 +237,7 @@ void registerModify(){
 		else if ((strcmp(register_number, "7") == 0))
 		{
 			updateR7(register_content);
-		} 
+		}
 		else if ((strcmp(register_number, "8") == 0))
 		{
 			updateR8(register_content);
@@ -226,7 +253,7 @@ void registerModify(){
 		else if ((strcmp(register_number, "11") == 0))
 		{
 			updateR11(register_content);
-		} 
+		}
 		else if ((strcmp(register_number, "12") == 0))
 		{
 			updateR12(register_content);
@@ -235,8 +262,58 @@ void registerModify(){
 		{
 			USART_putString("\n\r\n\r Register number invalid\n\r");
 		}
-		
 	}
 	USART_putString("\n\r");
 }
 
+void memoryDisplay(void)
+{
+	USART_putString("\n\r\n\r Executing Memory Display...\n\r\n\r");
+	if ((strcmp(args[2], " ") != 0))
+	{ // Verificar que no existan mas de 2 argumentos
+		USART_putString("\n\r\n\r Too many arguments\n\r");
+	}
+	else
+	{
+		// Si no se especifican start y end, usar el rango predeterminado
+		if (start == NULL || end == NULL)
+		{
+			start = "0x00000000";
+			end = "0xFFFFFFFF";
+		}
+		else
+		{
+			removeChar(start, 'x');
+			removeChar(end, 'x');
+		}
+
+		// Convertir HEX a sin signo
+		start_memory_display = strtoul(start, &pointer, 16);
+		end_memory_display = strtoul(end, &pointer, 16);
+
+		// Calcular espacio necesario para guardar el rango de direcciones. Bloques de 4 bytes
+		memory_range_blocks = ((end_long_memory_display - start_long_memory_display) / 4) + 1;
+
+		// Reservar memoria
+		display_memory = (uint32_t *)malloc(sizeof(uint32_t) * memory_range_blocks);
+
+		if (display_memory == NULL)
+		{
+			USART2_putSTring("Error: Memory allocation failed\n\r");
+			return;
+		}
+
+		// Llenar el arreglo con datos de la memoria
+		memoryDisplayAss(display_memory, start_memory_display, end_memory_display);
+
+		// Print de contenido de la memoria
+		for (uint32_t addr = start_memory_display; addr <= end_memory_display; addr += 4)
+		{
+			sprintf(arr_display_memory, "0x%08x\n\r", *((uint32_t *)addr));
+			USART2_putSTring(arr_display_memory);
+		}
+
+		// Liberar memoria
+		free(display_memory);
+	}
+}

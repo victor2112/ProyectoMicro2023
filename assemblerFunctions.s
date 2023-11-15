@@ -1,7 +1,7 @@
-		AREA |.text|, CODE, READONLY, ALIGN=2         
-		THUMB         
-		REQUIRE8         
-		PRESERVE8   
+		AREA |.text|, CODE, READONLY, ALIGN=2
+		THUMB
+		REQUIRE8
+		PRESERVE8
 
 
 		EXPORT  loadResgistersContent
@@ -19,7 +19,7 @@
 		EXPORT	updateR10
 		EXPORT	updateR11
 		EXPORT	updateR12
-			
+
 loadResgistersContent
 	push {lr}
 	str r0, [r0, #0]
@@ -44,8 +44,7 @@ loadR1Content
 	push {lr}
 	str r1, [r0, #0]
 	pop {pc}
-	bx lr
-	
+
 updateR0
 	push {lr}
 	movs r0, r0
@@ -57,7 +56,7 @@ updateR1
 	movs r1, r0
 	pop {pc}
 	bx lr
-	
+
 updateR2
 	push {lr}
 	movs r2, r0
@@ -69,7 +68,7 @@ updateR3
 	movs r3, r0
 	pop {pc}
 	bx lr
-	
+
 updateR4
 	push {lr}
 	movs r4, r0
@@ -81,7 +80,7 @@ updateR5
 	movs r5, r0
 	pop {pc}
 	bx lr
-	
+
 updateR6
 	push {lr}
 	movs r6, r0
@@ -99,7 +98,7 @@ updateR8
 	movs r8, r0
 	pop {pc}
 	bx lr
-	
+
 updateR9
 	push {lr}
 	movs r9, r0
@@ -111,7 +110,7 @@ updateR10
 	movs r10, r0
 	pop {pc}
 	bx lr
-	
+
 updateR11
 	push {lr}
 	movs r11, r0
@@ -123,8 +122,5 @@ updateR12
 	movs r12, r0
 	pop {pc}
 	bx lr
-	
 
-
-	
 	END
