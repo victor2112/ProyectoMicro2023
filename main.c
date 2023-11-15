@@ -279,14 +279,14 @@ void registerModify()
 void memoryDisplay(void)
 {
 	USART_putString("\n\r\n\r Executing Memory Display...\n\r\n\r");
-	if ((strcmp(args[3], " ") != 0))
-	{ // Verificar que no existan mas de 3 argumentos
+	if ((strcmp(args[2], " ") != 0))
+	{ // Verificar que no existan mas de 2 argumentos
 		USART_putString("\n\r\n\r Too many arguments\n\r");
 		return;
 	}
 
-	start = args[1];
-	end = args[2];
+	start = args[0];
+	end = args[1];
 
 	// Si no se especifican start y end, usar el rango predeterminado
 	if (start == NULL || end == NULL)
@@ -294,12 +294,13 @@ void memoryDisplay(void)
 		start = "0x00000000";
 		end = "0xFFFFFFFF";
 	}
-	else
-	{
-		removeChar(start, 'x');
-		removeChar(end, 'x');
-	}
-
+	
+	//start = strtok(start, "0x");
+	//start = strtok(end, "0x");		
+	
+	//removeChar(start, 'x');
+	//removeChar(end, 'x');
+	
 	// Convertir HEX a sin signo
 	start_memory_display = strtoul(start, &pointer, 16);
 	end_memory_display = strtoul(end, &pointer, 16);
@@ -312,7 +313,7 @@ void memoryDisplay(void)
 
 	if (display_memory == NULL)
 	{
-		USART2_putSTring("Error: Memory allocation failed\n\r");
+		USART_putString("Error: Memory allocation failed\n\r");
 		return;
 	}
 
@@ -320,11 +321,23 @@ void memoryDisplay(void)
 	memoryDisplayAss(display_memory, start_memory_display, end_memory_display);
 
 	// Print de contenido de la memoria
-	for (uint32_t addr = start_memory_display; addr <= end_memory_display; addr += 4)
+	uint32_t addr;
+	// Imprimir (printf)
+	int index_memory_display = 0;
+	while (start_memory_display <= end_memory_display)
+	{
+		sprintf(arr_display_memory, "0x%08x", display_memory[index_memory_display]);
+		USART_putString(arr_display_memory);
+		USART_putString("\n\r");
+		index_memory_display++;
+		start_memory_display += 0x4;
+	}
+	
+	/*for (addr = start_memory_display; addr <= end_memory_display; addr += 4)
 	{
 		sprintf(arr_display_memory, "0x%08x\n\r", *((uint32_t *)addr));
-		USART2_putSTring(arr_display_memory);
-	}
+		USART_putString(arr_display_memory);
+	}*/
 
 	// Liberar memoria
 	free(display_memory);
@@ -333,10 +346,7 @@ void memoryDisplay(void)
 void memoryModify()
 {
 	USART_putString("\n\r\n\r Executing Memory Modify...\n\r\n\r");
-	if ((strcmp(args[4], " ") != 0))
-	{ // Verificar que no existan mas de 4 argumentos
-		USART_putString("\n\r\n\r Too many arguments\n\r");
-	}
+	
 
 	memory_modify_addr = args[1];
 	memory_modify_data = args[2];

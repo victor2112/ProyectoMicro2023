@@ -389,6 +389,46 @@
               <FileType>1</FileType>
               <FilePath>.\main.c</FilePath>
             </File>
+            <File>
+              <FileName>assembler_functions.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\assembler_functions.h</FilePath>
+            </File>
+            <File>
+              <FileName>assemblerFunctions.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\assemblerFunctions.s</FilePath>
+            </File>
+            <File>
+              <FileName>commands.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\commands.h</FilePath>
+            </File>
+            <File>
+              <FileName>memory_display.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\memory_display.s</FilePath>
+            </File>
+            <File>
+              <FileName>memory_modify.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\memory_modify.s</FilePath>
+            </File>
+            <File>
+              <FileName>usart_utils.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\usart_utils.h</FilePath>
+            </File>
+            <File>
+              <FileName>utils.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\utils.c</FilePath>
+            </File>
+            <File>
+              <FileName>utils.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\utils.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
