@@ -9,6 +9,7 @@
 #include "commands.h"
 
 #include "assembler_functions.h"
+#include "call.h"
 
 char buffer[MAX_COMMAND_LENGTH];
 char error_flag = 0;
@@ -22,6 +23,7 @@ char *instruction;
 char *args[] = {" ", " ", " ", " "};
 char *token;
 int characters_iterator = 0;
+int arguments_iterator = 0;
 
 // Register Display
 void registerDisplay();
@@ -49,6 +51,14 @@ static char *memory_modify_addr;
 static char *memory_modify_data;
 static char *memory_modify_size;
 int size_memory = 4;
+
+// RUN
+void runCommand();
+unsigned long run_addr;
+
+// CALL
+void callCommand();
+unsigned long memory_call_address;
 
 int main(void)
 {
@@ -86,17 +96,17 @@ void USART2_IRQHandler(void)
 			command[characters_iterator] = '\0';
 			instruction = strtok(command, " ");
 			token = instruction;
-			int arguments_iterator = 0;
+			arguments_iterator = 0;
 			while (token != NULL)
 			{
 				token = strtok(NULL, " ");
 				if (token != NULL)
 				{
 					args[arguments_iterator] = token;
-					// USART_putString("\n\r\n\r token ");
-					// USART_putString((char *) &arguments_iterator);
-					// USART_putString(" ");
-					// USART_putString(token);
+					 USART_putString("\n\r\n\r token ");
+					 USART_putString((char *) &arguments_iterator);
+					 USART_putString(" ");
+					 USART_putString(args[arguments_iterator]);
 					arguments_iterator++;
 				}
 
@@ -125,6 +135,34 @@ void USART2_IRQHandler(void)
 				else if ((strcmp(instruction, MEMORY_MODIFY_COMMAND) == 0))
 				{
 					memoryModify();
+				}
+				else if ((strcmp(instruction, BLOCK_FILL_COMMAND) == 0))
+				{
+					//TODO
+				}
+				else if ((strcmp(instruction, RUN_COMMAND) == 0))
+				{
+					runCommand();
+				}
+				else if ((strcmp(instruction, CALL_COMMAND) == 0))
+				{
+					callCommand();
+				}
+				else if ((strcmp(instruction, IOMAP_COMMAND) == 0))
+				{
+					//TODO
+				}
+				else if ((strcmp(instruction, IOUNMAP_COMMAND) == 0))
+				{
+					//TODO
+				}
+				else if ((strcmp(instruction, SEGMENT_OUT_COMMAND) == 0))
+				{
+					//TODO
+				}
+				else if ((strcmp(instruction, LCD_PRINT_COMMAND) == 0))
+				{
+					//TODO
 				}
 				else
 				{
@@ -198,6 +236,20 @@ void registerDisplay()
 			USART_putString("\n\r");
 		}
 	}
+	USART_putString("\n\r");
+}
+
+void runCommand() {
+	USART_putString("\n\r\n\r Executing Run...\n\r\n\r");
+	if ((strcmp(args[1], " ") != 0))
+	{
+		USART_putString("\n\r\n\r Too many arguments\n\r"); // Verificar que no existan argumentos
+	}
+	run_addr = strtoul("RD", &endptr, 16);
+	sprintf(buffer, " RD en hex = 0x%08x", (int) run_addr);
+	USART_putString(buffer);
+			
+	
 	USART_putString("\n\r");
 }
 
@@ -346,4 +398,20 @@ void memoryModify()
 
 	// TODO
 	return;
+}
+
+void callCommand(){
+	USART_putString("\n\r\n\r Executing Call...\n\r\n\r");
+	
+	memory_call_address = strtoul(strtok(args[0], "0x"), &endptr, 16);;
+	
+	sprintf(buffer, " Run command in address = 0x%08x", (int)memory_call_address);
+	USART_putString(buffer);
+	
+	callAddrAssembler(memory_call_address);
+	
+	USART_putString("\n\r");
+	
+	
+
 }
