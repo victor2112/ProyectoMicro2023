@@ -18,3 +18,5 @@ loopCopy
 	cmp r1, r2
 	ble loopCopy
 	pop { pc }
+
+	END
