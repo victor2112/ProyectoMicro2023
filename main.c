@@ -66,6 +66,14 @@ unsigned long run_addr;
 void callCommand();
 unsigned long memory_call_address;
 
+// Block Fill
+void blockFill();
+static char *bf_start;
+static char *bf_end;
+static char *bf_data;
+static char *bf_size;
+int size_bf = 0;
+
 int main(void)
 {
 
@@ -428,6 +436,43 @@ void memoryModify()
 
 	// Modificar la memoria en ensamblador
 	modifyMemoryAss(address_mm, data_mm);
+}
+
+void blockFill()
+{
+	USART_putString("\n\r\n\r Executing Block Fill...\n\r\n\r");
+
+	// Verificar argumentos
+	if (args[0] == NULL || args[1] == NULL || args[2] == NULL || args[3] == NULL)
+	{
+		USART_putString("Arguments Missing. Command: BF start end data [size]\n\r");
+		return;
+	}
+
+	bf_start = strtoul(args[0], &endptr, 16);
+	bf_end = strtoul(args[1], &endptr, 16);
+	bf_data = (unsigned char)strtoul(args[2], &endptr, 16);
+	bf_size = args[3];
+
+	sscanf(bf_size, "%d", &size_bf);
+
+	// Verificar el tamaño válido (1, 2 o 4 bytes)
+	if (size_bf != 1 && size_bf != 2 && size_bf != 4)
+	{
+		USART_putString("Incorrect Size. Sizes: 1, 2 o 4 bytes.\n\r");
+		return;
+	}
+
+	// Validar rango
+	if (bf_start >= bf_end)
+	{
+		USART_putString("Invalid Range. start to eq\n\r");
+		return;
+	}
+
+	// Implementar memset: Llenar bloque de memoria desde inicio a fin
+	size_t block_size = bf_end - bf_start;
+	memset((void *)bf_start, bf_data, block_size);
 }
 
 void callCommand()
