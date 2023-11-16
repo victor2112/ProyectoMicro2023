@@ -152,7 +152,7 @@ void USART2_IRQHandler(void)
 				}
 				else if ((strcmp(instruction, BLOCK_FILL_COMMAND) == 0))
 				{
-					// TODO
+					blockFill();
 				}
 				else if ((strcmp(instruction, RUN_COMMAND) == 0))
 				{
