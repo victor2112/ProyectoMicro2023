@@ -103,10 +103,10 @@ void USART2_IRQHandler(void)
 				if (token != NULL)
 				{
 					args[arguments_iterator] = token;
-					 USART_putString("\n\r\n\r token ");
-					 USART_putString((char *) &arguments_iterator);
-					 USART_putString(" ");
-					 USART_putString(args[arguments_iterator]);
+					USART_putString("\n\r\n\r token ");
+					USART_putString((char *)&arguments_iterator);
+					USART_putString(" ");
+					USART_putString(args[arguments_iterator]);
 					arguments_iterator++;
 				}
 
@@ -138,7 +138,7 @@ void USART2_IRQHandler(void)
 				}
 				else if ((strcmp(instruction, BLOCK_FILL_COMMAND) == 0))
 				{
-					//TODO
+					// TODO
 				}
 				else if ((strcmp(instruction, RUN_COMMAND) == 0))
 				{
@@ -150,19 +150,19 @@ void USART2_IRQHandler(void)
 				}
 				else if ((strcmp(instruction, IOMAP_COMMAND) == 0))
 				{
-					//TODO
+					// TODO
 				}
 				else if ((strcmp(instruction, IOUNMAP_COMMAND) == 0))
 				{
-					//TODO
+					// TODO
 				}
 				else if ((strcmp(instruction, SEGMENT_OUT_COMMAND) == 0))
 				{
-					//TODO
+					// TODO
 				}
 				else if ((strcmp(instruction, LCD_PRINT_COMMAND) == 0))
 				{
-					//TODO
+					// TODO
 				}
 				else
 				{
@@ -239,17 +239,17 @@ void registerDisplay()
 	USART_putString("\n\r");
 }
 
-void runCommand() {
+void runCommand()
+{
 	USART_putString("\n\r\n\r Executing Run...\n\r\n\r");
 	if ((strcmp(args[1], " ") != 0))
 	{
 		USART_putString("\n\r\n\r Too many arguments\n\r"); // Verificar que no existan argumentos
 	}
 	run_addr = strtoul("RD", &endptr, 16);
-	sprintf(buffer, " RD en hex = 0x%08x", (int) run_addr);
+	sprintf(buffer, " RD en hex = 0x%08x", (int)run_addr);
 	USART_putString(buffer);
-			
-	
+
 	USART_putString("\n\r");
 }
 
@@ -400,18 +400,17 @@ void memoryModify()
 	return;
 }
 
-void callCommand(){
+void callCommand()
+{
 	USART_putString("\n\r\n\r Executing Call...\n\r\n\r");
-	
-	memory_call_address = strtoul(strtok(args[0], "0x"), &endptr, 16);;
-	
+
+	memory_call_address = strtoul(strtok(args[0], "0x"), &endptr, 16);
+	;
+
 	sprintf(buffer, " Run command in address = 0x%08x", (int)memory_call_address);
 	USART_putString(buffer);
-	
-	callAddrAssembler(memory_call_address);
-	
-	USART_putString("\n\r");
-	
-	
 
+	callAddrAssembler(memory_call_address);
+
+	USART_putString("\n\r");
 }
