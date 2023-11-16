@@ -54,16 +54,25 @@ int size_memory = 4;
 
 // RUN
 void runCommand();
+void I2C_Write(char slave, char addr, char data);
+void I2C_Read(char slave, char addr, char *data);
 unsigned long memory_run_address;
 
 // CALL
 void callCommand();
 unsigned long memory_call_address;
 
+// SEGMENT OUT
+#define 	SLAVE_ADDR		0x40
+void I2C_config();
+char data_i2c;
+uint8_t ticks;
+
 int main(void)
 {
 
 	USART_config(115200);
+	I2C_config();
 
 	USART_putString("\n\r               Microprocesadores 2023                  \n\r");
 	USART_putString("                     Programa Monitor                      \n\r");
@@ -423,4 +432,57 @@ void callCommand()
 	callAddrAssembler(memory_call_address);
 
 	USART_putString("\n\r");
+}
+
+void I2C_config(){
+
+	RCC->AHBENR |= RCC_AHBENR_GPIOBEN;
+	RCC->APB1ENR |= RCC_APB1ENR_I2C1EN;
+	GPIOB->MODER |= (2<<12) | (2<<14);
+	GPIOB->AFR[0] |= (4<<24) | (4<<28);
+	
+	// fbus = 8MHz , fi2c = 100kHz 
+	I2C1->TIMINGR |= (1<<28) | (0x4<<20) | (0x2<<16) |(0xf<<8) | (0x13<<0);
+	//I2C1->CR1 |= I2C_CR1_TXIE | I2C_CR1_RXIE;
+	I2C1->CR1 |= I2C_CR1_PE;
+
+	I2C_Write(SLAVE_ADDR,0x00,0xf0); //IODIRA (7-4 AS INPUTS, 3-0 AS OUTPUT)
+	I2C_Write(SLAVE_ADDR,0x0c,0xf0); //PULL UP (7-4 WITH PULL-UP)
+	I2C_Write(SLAVE_ADDR,0x12,0x7f); //PORTA REGISTER (Escribimos cero)
+	I2C_Write(SLAVE_ADDR,0x13,0x0f); //PORTB REGISTER (Encendemos Digit 1, 2, 3 y 4)
+	
+	SysTick_Config(SystemCoreClock/10);
+
+
+}
+
+void SysTick_Handler(void){
+	ticks++;
+
+	//I2C_Write(SLAVE_ADDR,0x12,(ticks%16)); //PORTA REGISTER 
+	//I2C_Read(SLAVE_ADDR,0x12,&data_i2c);
+}
+
+void I2C_Write(char slave, char addr, char data_i2c){
+	// AutoEND, Reload, 2 bytes
+	I2C1->CR2 = 0x00;
+	I2C1->CR2 = I2C_CR2_AUTOEND | (2<<16) | (slave) | I2C_CR2_START;
+	while(!(I2C1->ISR& I2C_ISR_TXIS));
+	I2C1->TXDR = addr;
+	while(!(I2C1->ISR& I2C_ISR_TXIS));
+	I2C1->TXDR = data_i2c;
+	while(!(I2C1->ISR& I2C_ISR_TXE));
+}
+
+void I2C_Read(char slave, char addr, char * data_i2c){
+	// AutoEND, Reload, 1 bytes
+	I2C1->CR2 = 0x00;
+	I2C1->CR2 = I2C_CR2_AUTOEND | (1<<16) | (slave) | I2C_CR2_START;
+	while(!(I2C1->ISR& I2C_ISR_TXIS));
+	I2C1->TXDR = addr;
+	while(!(I2C1->ISR& I2C_ISR_TXE));
+	I2C1->CR2 = 0x00;
+	I2C1->CR2 |= I2C_CR2_AUTOEND | (1<<16) | I2C_CR2_RD_WRN | (slave) | I2C_CR2_START;
+	while(!(I2C1->ISR& I2C_ISR_RXNE));
+	*data_i2c = I2C1->RXDR;
 }
