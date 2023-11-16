@@ -54,7 +54,7 @@ int size_memory = 4;
 
 // RUN
 void runCommand();
-unsigned long run_addr;
+unsigned long memory_run_address;
 
 // CALL
 void callCommand();
@@ -239,20 +239,6 @@ void registerDisplay()
 	USART_putString("\n\r");
 }
 
-void runCommand()
-{
-	USART_putString("\n\r\n\r Executing Run...\n\r\n\r");
-	if ((strcmp(args[1], " ") != 0))
-	{
-		USART_putString("\n\r\n\r Too many arguments\n\r"); // Verificar que no existan argumentos
-	}
-	run_addr = strtoul("RD", &endptr, 16);
-	sprintf(buffer, " RD en hex = 0x%08x", (int)run_addr);
-	USART_putString(buffer);
-
-	USART_putString("\n\r");
-}
-
 void registerModify()
 {
 	USART_putString("\n\r\n\r Executing Register Modify...\n\r\n\r");
@@ -400,16 +386,40 @@ void memoryModify()
 	return;
 }
 
+void runCommand()
+{
+	USART_putString("\n\r\n\r Executing Run...\n\r\n\r");
+	if ((strcmp(args[1], " ") != 0))
+	{
+		USART_putString("\n\r\n\r Too many arguments\n\r"); // Verificar que no existan argumentos
+		return;
+	}
+	
+	/*run_addr = strtoul("RD", &endptr, 16);
+	sprintf(buffer, " RD en hex = 0x%08x", (int)run_addr);
+	USART_putString(buffer);
+	*/
+	
+	memory_run_address = strtoul(strtok(args[0], "0x"), &endptr, 16);
+	sprintf(buffer, " Run code in address = 0x%08x", (int)memory_run_address);
+	USART_putString(buffer);
+	runAddrAssembler(memory_run_address);
+
+	USART_putString("\n\r");
+}
+
 void callCommand()
 {
 	USART_putString("\n\r\n\r Executing Call...\n\r\n\r");
-
+	if ((strcmp(args[1], " ") != 0))
+	{
+		USART_putString("\n\r\n\r Too many arguments\n\r"); // Verificar que no existan argumentos
+		return;
+	}
+	
 	memory_call_address = strtoul(strtok(args[0], "0x"), &endptr, 16);
-	;
-
-	sprintf(buffer, " Run command in address = 0x%08x", (int)memory_call_address);
+	sprintf(buffer, " Call subrutine in address = 0x%08x", (int)memory_call_address);
 	USART_putString(buffer);
-
 	callAddrAssembler(memory_call_address);
 
 	USART_putString("\n\r");

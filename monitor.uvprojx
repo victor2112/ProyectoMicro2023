@@ -434,6 +434,16 @@
               <FileType>5</FileType>
               <FilePath>.\call.h</FilePath>
             </File>
+            <File>
+              <FileName>run.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\run.s</FilePath>
+            </File>
+            <File>
+              <FileName>run.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\run.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
