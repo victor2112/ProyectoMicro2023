@@ -68,8 +68,8 @@ void I2C_config();
 char data_i2c;
 uint8_t ticks;
 void segmentOut();
-char *intNumber = 0;
-char *decimalNumber = 0;
+char *intNumber = "0";
+char *decimalNumber = "0";
 char hexNumberDisplay(char *num);
 char hexDigitDisplay(char *num);
 char *digitDisplay;
@@ -529,18 +529,27 @@ void segmentOut(){
 	decimalNumber = strtok(NULL, "");
 	
 	if (strlen(intNumber)==0){
-		intNumber = 0;
+		intNumber = "0";
 	}
 	if (strlen(decimalNumber)==0){
-		decimalNumber = 0;
+		decimalNumber = "0";
 	}
 	
+	
+	char subtext[4] = "0";
 	if (strlen(intNumber)>4) {
-		intNumber = strncpy(intNumber,intNumber,4);
-		decimalNumber = 0;
+		
+		sprintf(buffer, " Decimal number must be less than 10000\n\r");
+		USART_putString(buffer);
+		return;
 	}
 	if ( strlen(decimalNumber) > (4 - strlen(intNumber)) ) {
-		decimalNumber = strncpy(decimalNumber,decimalNumber,4 - strlen(intNumber));
+		memcpy(subtext, &decimalNumber[0], 4 - strlen(intNumber));
+		if (strlen(subtext) == 0) {
+			decimalNumber = "0";
+		} else {
+			decimalNumber = (char *) &subtext;
+		}
 	}
 	
 	
