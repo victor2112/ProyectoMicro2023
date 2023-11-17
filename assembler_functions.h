@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 
-extern void memoryDisplayAss(uint32_t *memory, uint32_t start, uint32_t end);
 extern void updateR0(unsigned long register_content);
 extern void updateR1(unsigned long register_content);
 extern void updateR2(unsigned long register_content);
