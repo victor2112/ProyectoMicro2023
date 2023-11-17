@@ -38,7 +38,6 @@ loadResgistersContent
 	str r13, [r0, #52]
 	str r14, [r0, #56]
 	pop {pc}
-	bx lr
 
 loadR1Content
 	push {lr}
@@ -49,78 +48,65 @@ updateR0
 	push {lr}
 	movs r0, r0
 	pop {pc}
-	bx lr
 
 updateR1
 	push {lr}
 	movs r1, r0
 	pop {pc}
-	bx lr
 
 updateR2
 	push {lr}
 	movs r2, r0
 	pop {pc}
-	bx lr
 
 updateR3
 	push {lr}
 	movs r3, r0
 	pop {pc}
-	bx lr
 
 updateR4
 	push {lr}
 	movs r4, r0
 	pop {pc}
-	bx lr
 
 updateR5
 	push {lr}
 	movs r5, r0
 	pop {pc}
-	bx lr
 
 updateR6
 	push {lr}
 	movs r6, r0
 	pop {pc}
-	bx lr
 
 updateR7
 	push {lr}
 	movs r7, r0
 	pop {pc}
-	bx lr
 
 updateR8
 	push {lr}
 	movs r8, r0
 	pop {pc}
-	bx lr
 
 updateR9
 	push {lr}
 	movs r9, r0
 	pop {pc}
-	bx lr
 
 updateR10
 	push {lr}
 	movs r10, r0
 	pop {pc}
-	bx lr
 
 updateR11
 	push {lr}
 	movs r11, r0
 	pop {pc}
-	bx lr
 
 updateR12
 	push {lr}
 	movs r12, r0
 	pop {pc}
-	bx lr
 
 	END

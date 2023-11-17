@@ -3,6 +3,6 @@
 
 #include <stdint.h>
 
-void callAddrAssembler(uint32_t memory_call_address);
+void runAddrAssembler(uint32_t memory_run_address);
 
 #endif
