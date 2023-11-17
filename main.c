@@ -444,11 +444,15 @@ void blockFill()
 		USART_putString("Arguments Missing. Command: BF start end data [size]\n\r");
 		return;
 	}
+	
+	
+	unsigned long bf_start_ul = strtoul(args[0], &endptr, 16);
+	unsigned long bf_end_ul = strtoul(args[1], &endptr, 16);
+	unsigned long bf_data_ul = strtoul(args[2], &endptr, 16);
 
-	bf_start = strtoul(args[0], &endptr, 16);
-	bf_end = strtoul(args[1], &endptr, 16);
-	bf_data = (unsigned char)strtoul(args[2], &endptr, 16);
-	bf_size = args[3];
+	bf_start = (char *)bf_start_ul;
+	bf_end = (char *)bf_end_ul;
+	bf_data = (char *)bf_data_ul;
 
 	sscanf(bf_size, "%d", &size_bf);
 
@@ -468,7 +472,8 @@ void blockFill()
 
 	// Implementar memset: Llenar bloque de memoria desde inicio a fin
 	size_t block_size = bf_end - bf_start;
-	memset((void *)bf_start, bf_data, block_size);
+	memset((void *)bf_start, (unsigned int)(*bf_data), block_size);
+
 }
 
 void runCommand()
