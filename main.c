@@ -54,7 +54,7 @@ void memoryModify();
 static char *md_addr;
 static char *md_data;
 static char *md_size;
-unsigned int size_memory = 0;
+unsigned int size_memory = 4;
 unsigned long address_mm;
 unsigned long data_mm;
 
@@ -407,7 +407,7 @@ void memoryModify()
 	USART_putString("\n\r\n\r Executing Memory Modify...\n\r\n\r");
 
 	// Verificar argumentos
-	if (args[0] == NULL || args[1] == NULL || args[2] == NULL)
+	if ((strcmp(args[0], " ") == 0) || (strcmp(args[1], " ") == 0) || (strcmp(args[2], " ") == 0))
 	{
 		USART_putString("Arguments Missing. Command: MM addr data [size]\n\r");
 		return;
@@ -416,27 +416,29 @@ void memoryModify()
 	md_addr = args[0];
 	md_data = args[1];
 	md_size = args[2];
-
+	
 	// Tomar el contenido de args[2] y transformarlo
 	sscanf(md_size, "%u", &size_memory);
-
+	
 	// Verificar el tamaño válido (1, 2 o 4 bytes)
 	if (size_memory != 1 && size_memory != 2 && size_memory != 4)
 	{
 		USART_putString("Incorrect Size. Sizes: 1, 2 o 4 bytes.\n\r");
 		return;
 	}
-
+	
 	// Obtener la dirección
-	address_mm = strtoul(md_addr, &endptr, 16);
+	address_mm = strtoul(md_addr, &endptr, 16);	
 	data_mm = strtoul(md_data, &endptr, 16);
-
+	
 	// Send and Return Memory for Assembler
 	start_ma = address_mm;
 	return_ma = data_mm;
-
+	
 	// Modificar la memoria en ensamblador
 	modifyMemoryAss(address_mm, data_mm);
+	
+	USART_putString("\n\r\n\r Memory Modify OK...\n\r\n\r");
 }
 
 void blockFill()
@@ -708,7 +710,6 @@ char hexDigitDisplay(char *num){
 		return 0x01;
 	}
 }
-
 
 
 

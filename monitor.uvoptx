@@ -198,6 +198,11 @@
           <WinNumber>1</WinNumber>
           <ItemText>memory_call_address</ItemText>
         </Ww>
+        <Ww>
+          <count>3</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>address_mm</ItemText>
+        </Ww>
       </WatchWindow1>
       <MemoryWindow1>
         <Mm>
