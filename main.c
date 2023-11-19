@@ -55,7 +55,7 @@ void memoryModify();
 static char *md_addr;
 static char *md_data;
 static char *md_size;
-unsigned int size_memory = 0;
+unsigned int size_memory = 4;
 unsigned long address_mm;
 unsigned long data_mm;
 
@@ -139,10 +139,10 @@ void USART2_IRQHandler(void)
 				if (token != NULL)
 				{
 					args[arguments_iterator] = token;
-					//USART_putString("\n\r\n\r token ");
-					//USART_putString((char *)&arguments_iterator);
-					//USART_putString(" ");
-					//USART_putString(args[arguments_iterator]);
+					// USART_putString("\n\r\n\r token ");
+					// USART_putString((char *)&arguments_iterator);
+					// USART_putString(" ");
+					// USART_putString(args[arguments_iterator]);
 					arguments_iterator++;
 				}
 
@@ -414,7 +414,7 @@ void memoryModify()
 	USART_putString("\n\r\n\r Executing Memory Modify...\n\r\n\r");
 
 	// Verificar argumentos
-	if (args[0] == NULL || args[1] == NULL || args[2] == NULL)
+	if ((strcmp(args[0], " ") == 0) || (strcmp(args[1], " ") == 0) || (strcmp(args[2], " ") == 0))
 	{
 		USART_putString("Arguments Missing. Command: MM addr data [size]\n\r");
 		return;
@@ -444,6 +444,8 @@ void memoryModify()
 
 	// Modificar la memoria en ensamblador
 	modifyMemoryAss(address_mm, data_mm);
+
+	USART_putString("\n\r\n\r Memory Modify OK...\n\r\n\r");
 }
 
 void blockFill()
@@ -603,9 +605,9 @@ void SysTick_Handler(void)
 		I2C_Write(SLAVE_ADDR,0x13,hexDigitDisplay(digitN+1)); //PORTB REGISTER (Encendemos Digit correspondiente)	
 		digitN++;
 	}
-		
-	//I2C_Write(SLAVE_ADDR,0x12,(ticks%16)); //PORTA REGISTER 
-	//I2C_Read(SLAVE_ADDR,0x12,&data_i2c);
+
+	// I2C_Write(SLAVE_ADDR,0x12,(ticks%16)); //PORTA REGISTER
+	// I2C_Read(SLAVE_ADDR,0x12,&data_i2c);
 }
 
 
@@ -658,28 +660,34 @@ void segmentOut(){
 	
 	intNumber = strtok(args[0], ".");
 	decimalNumber = strtok(NULL, "");
-	
-	if (strlen(intNumber)==0){
+
+	if (strlen(intNumber) == 0)
+	{
 		intNumber = "0";
 	}
-	if (strlen(decimalNumber)==0){
+	if (strlen(decimalNumber) == 0)
+	{
 		decimalNumber = "0";
 	}
-	
-	
+
 	char subtext[4] = "0";
-	if (strlen(intNumber)>4) {
-		
+	if (strlen(intNumber) > 4)
+	{
+
 		sprintf(buffer, " Decimal number must be less than 10000\n\r");
 		USART_putString(buffer);
 		return;
 	}
-	if ( strlen(decimalNumber) > (4 - strlen(intNumber)) ) {
+	if (strlen(decimalNumber) > (4 - strlen(intNumber)))
+	{
 		memcpy(subtext, &decimalNumber[0], 4 - strlen(intNumber));
-		if (strlen(subtext) == 0) {
+		if (strlen(subtext) == 0)
+		{
 			decimalNumber = "0";
-		} else {
-			decimalNumber = (char *) &subtext;
+		}
+		else
+		{
+			decimalNumber = (char *)&subtext;
 		}
 	}
 	
@@ -735,7 +743,7 @@ char hexNumberDisplay(int num){
 	else if (num == 8)
 	{
 		return 0x7f;
-	} 
+	}
 	else // #9
 	{
 		return 0x67;
@@ -754,15 +762,9 @@ char hexDigitDisplay(int num){
 	else if (num == 3)
 	{
 		return 0x02;
-	} 
+	}
 	else // digit 4
 	{
 		return 0x01;
 	}
 }
-
-
-
-
-
-
