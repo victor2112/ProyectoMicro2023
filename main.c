@@ -2,8 +2,9 @@
 
 #include <string.h>
 #include <stdio.h>
+#define _OPEN_SYS_ITOA_EXT
 #include <stdlib.h>
-
+#include <math.h>
 #include "usart_utils.h"
 #include "utils.h"
 #include "commands.h"
@@ -76,9 +77,15 @@ uint8_t ticks;
 void segmentOut();
 char *intNumber = "0";
 char *decimalNumber = "0";
-char hexNumberDisplay(char *num);
-char hexDigitDisplay(char *num);
-char *digitDisplay;
+char hexNumberDisplay(int num);
+char hexDigitDisplay(int num);
+char *digitDisplay = "0";
+int digitN = 0;
+int segmentFlag = 0;
+int intNumberi = 0;
+int decimalNumberi = 0;
+int intNumberINT = 0;
+int decimalNumberINT = 0;
 
 // Block Fill
 void blockFill();
@@ -92,7 +99,7 @@ int main(void)
 {
 
 	USART_config(115200);
-	I2C_config();
+	//I2C_config();
 
 	USART_putString("\n\r               Microprocesadores 2023                  \n\r");
 	USART_putString("                     Programa Monitor                      \n\r");
@@ -537,39 +544,70 @@ void I2C_config()
 	I2C_Write(SLAVE_ADDR,0x12,0x3f); //PORTA REGISTER (Escribimos cero)
 	I2C_Write(SLAVE_ADDR,0x13,0x0f); //PORTB REGISTER (Encendemos Digit 1, 2, 3 y 4)
 	
-	SysTick_Config(SystemCoreClock/10);
+	SysTick_Config(SystemCoreClock/1000);
 
+}
+
+
+int getDigit(int num, int position) {
+    int pow10 = 1;
+	int length = 1 + (int)log10(num);
+	int i = length - 1;
+	
+    for (i = length -1;  i > position; --i) {
+        pow10 *= 10;
+    }
+    return (num / pow10) % 10;
 }
 
 void SysTick_Handler(void)
 {
 	ticks++;
 	
+	if(segmentFlag == 1 ){
+		return;
+	}
+	
+	I2C_Write(SLAVE_ADDR,0x13,0x00); //PORTB REGISTER (Apagamos todos los Digit)
 	if ((strcmp(intNumber, "0") == 0) && (strcmp(decimalNumber, "0") == 0)) // Colocamos 0 en los 4 digitos
 	{
 		I2C_Write(SLAVE_ADDR,0x12,0x3f); //PORTA REGISTER (Escribimos cero)
 		I2C_Write(SLAVE_ADDR,0x13,0x0f); //PORTB REGISTER (Encendemos Digit 1, 2, 3 y 4)
 	} else { // Imprimimos en los 4 digitos del display
-		int digitN;
-		for (digitN = 0; digitN < 4; digitN++) {
-			if (digitN < strlen(intNumber)) { // print de parte entera
-				I2C_Write(SLAVE_ADDR,0x12,hexNumberDisplay(&intNumber[digitN])); //PORTA REGISTER (Escribimos el numero codificado)
-				if (digitN+1 < strlen(intNumber)) { // //PORTA REGISTER (encender el punto decimal)
-					I2C_Write(SLAVE_ADDR,0x12,hexNumberDisplay(&intNumber[digitN]) | (1<<7)); //PORTA REGISTER (Escribimos el numero codificado con el punto decimal)
-				}
-			} else if (digitN < (strlen(decimalNumber) + strlen(intNumber)) ) { // print de parte decimal
-				I2C_Write(SLAVE_ADDR,0x12,hexNumberDisplay(&decimalNumber[digitN - strlen(intNumber)])); //PORTA REGISTER (Escribimos el numero codificado)
-			} else { // print de ceros para llenar el display
-				I2C_Write(SLAVE_ADDR,0x12,0x3f); //PORTA REGISTER (Escribimos cero)
-			}
-			digitDisplay = (char *) digitN+1;
-			I2C_Write(SLAVE_ADDR,0x13,hexDigitDisplay(digitDisplay)); //PORTB REGISTER (Encendemos Digit correspondiente)	
+		if (digitN == 4) {
+			digitN = 0;
 		}
+		
+
+		if (digitN < intNumberi) { // print de parte entera
+			
+			int value = getDigit(intNumberINT, digitN); 
+			I2C_Write(SLAVE_ADDR,0x12,hexNumberDisplay(value)); //PORTA REGISTER (Escribimos el numero codificado)
+			
+			//I2C_Write(SLAVE_ADDR,0x12,hexNumberDisplay(&intNumber[digitN])); //PORTA REGISTER (Escribimos el numero codificado)
+			if (digitN+1 == intNumberi) { // //PORTA REGISTER (encender el punto decimal)
+				I2C_Write(SLAVE_ADDR,0x12,hexNumberDisplay(value) | (1<<7)); //PORTA REGISTER (Escribimos el numero codificado con el punto decimal)
+			}
+		} else if (digitN < (decimalNumberi + intNumberi) ) { // print de parte decimal
+			
+			int value = getDigit(decimalNumberINT, digitN-intNumberi); 
+			I2C_Write(SLAVE_ADDR,0x12, hexNumberDisplay(value)); //PORTA REGISTER (Escribimos el numero codificado)
+			
+			
+			//I2C_Write(SLAVE_ADDR,0x12,hexNumberDisplay(&decimalNumber[digitN - intNumberi])); //PORTA REGISTER (Escribimos el numero codificado)
+		} else { // print de ceros para llenar el display
+			I2C_Write(SLAVE_ADDR,0x12,0x5b); //PORTA REGISTER (Escribimos cero)
+		}
+		//strcpy( digitDisplay, "" );
+		//digitDisplay = (char *) digitN+1;
+		I2C_Write(SLAVE_ADDR,0x13,hexDigitDisplay(digitN+1)); //PORTB REGISTER (Encendemos Digit correspondiente)	
+		digitN++;
 	}
 		
 	//I2C_Write(SLAVE_ADDR,0x12,(ticks%16)); //PORTA REGISTER 
 	//I2C_Read(SLAVE_ADDR,0x12,&data_i2c);
 }
+
 
 void I2C_Write(char slave, char addr, char data_i2c)
 {
@@ -605,10 +643,16 @@ void I2C_Read(char slave, char addr, char *data_i2c)
 
 void segmentOut(){
 	
+	segmentFlag = 1;
 	USART_putString("\n\r\n\r Executing Segment Out...\n\r\n\r");
 	if ((strcmp(args[1], " ") != 0))
 	{
 		USART_putString("\n\r\n\r Too many arguments\n\r"); // Verificar que no existan argumentos
+		return;
+	}
+	if ((strcmp(args[0], " ") == 0))
+	{
+		USART_putString("\n\r\n\r Number parameter is mising\n\r"); // Verificar que no existan argumentos
 		return;
 	}
 	
@@ -639,48 +683,56 @@ void segmentOut(){
 		}
 	}
 	
+	char *output;
+  intNumberINT = strtol(intNumber, &output, 10);
+  decimalNumberINT = strtol(decimalNumber, &output, 10);
 	
+	for (intNumberi = 0; intNumber[intNumberi] != '\0'; ++intNumberi);
+	for (decimalNumberi = 0; decimalNumber[decimalNumberi] != '\0'; ++decimalNumberi);
+
 	sprintf(buffer, " Display decimal number %s.%s", intNumber, decimalNumber);
 	USART_putString(buffer);
-	
+	//sprintf(buffer, " >>>>>>Display decimal number %d.%d", intNumberINT, decimalNumberINT);
+	//USART_putString(buffer);
 	USART_putString("\n\r");
+	segmentFlag = 0;
 		
 }
 
-char hexNumberDisplay(char *num){
-	if ((strcmp(num, "0") == 0))
+char hexNumberDisplay(int num){
+	if (num == 0)
 	{
 		return 0x3f;
 	}
-	else if ((strcmp(num, "1") == 0))
+	else if (num == 1)
 	{
 		return 0x06;
 	} 
-	else if ((strcmp(num, "2") == 0))
+	else if (num == 2)
 	{
 		return 0x5b;
 	} 
-	else if ((strcmp(num, "3") == 0))
+	else if (num == 3)
 	{
 		return 0x4f;
 	} 
-	else if ((strcmp(num, "4") == 0))
+	else if (num == 4)
 	{
 		return 0x66;
 	} 
-	else if ((strcmp(num, "5") == 0))
+	else if (num == 5)
 	{
 		return 0x6d;
 	}
-	else if ((strcmp(num, "6") == 0))
+	else if (num == 6)
 	{
 		return 0x7c;
 	} 
-	else if ((strcmp(num, "7") == 0))
+	else if (num == 7)
 	{
 		return 0x07;
 	} 
-	else if ((strcmp(num, "8") == 0))
+	else if (num == 8)
 	{
 		return 0x7f;
 	} 
@@ -690,16 +742,16 @@ char hexNumberDisplay(char *num){
 	}
 }
 
-char hexDigitDisplay(char *num){
-	if ((strcmp(num, "1") == 0))
+char hexDigitDisplay(int num){
+	if (num == 1)
 	{
 		return 0x08;
 	}
-	else if ((strcmp(num, "2") == 0))
+	else if (num == 2)
 	{
 		return 0x04;
 	} 
-	else if ((strcmp(num, "3") == 0))
+	else if (num == 3)
 	{
 		return 0x02;
 	} 
