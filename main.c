@@ -103,7 +103,7 @@ int main(void)
 {
 
 	USART_config(115200);
-	//I2C_config();
+	// I2C_config();
 
 	USART_putString("\n\r               Microprocesadores 2023                  \n\r");
 	USART_putString("                     Programa Monitor                      \n\r");
@@ -445,44 +445,47 @@ void memoryModify()
 	USART_putString("\n\r\n\r Memory Modify OK...\n\r\n\r");
 }
 
-void blockFill() 
+void blockFill()
 {
 	USART_putString("\n\r\n\r Executing Block Fill...\n\r\n\r");
 
 	// Verificar argumentos
-	if ((strcmp(args[0], " ") == 0) || (strcmp(args[1], " ") == 0) || (strcmp(args[2], " ") == 0) || (strcmp(args[3], " ") == 0)) {
-			USART_putString("Arguments Missing. Command: BF start end data [size]\n\r");
-			return;
+	if ((strcmp(args[0], " ") == 0) || (strcmp(args[1], " ") == 0) || (strcmp(args[2], " ") == 0) || (strcmp(args[3], " ") == 0))
+	{
+		USART_putString("Arguments Missing. Command: BF start end data [size]\n\r");
+		return;
 	}
 
 	bf_start = args[0];
 	bf_end = args[1];
 	bf_data = args[2];
 	bf_size = args[3];
-	
+
 	// Tomar el contenido de args[3] y transformarlo
 	sscanf(bf_size, "%u", &size_bf);
 
 	// Verificar el tamaño válido (1, 2 o 4 bytes)
-	if (size_bf != 1 && size_bf != 2 && size_bf != 4) {
-			USART_putString("Incorrect Size. Sizes: 1, 2 o 4 bytes.\n\r");
-			return;
+	if (size_bf != 1 && size_bf != 2 && size_bf != 4)
+	{
+		USART_putString("Incorrect Size. Sizes: 1, 2 o 4 bytes.\n\r");
+		return;
 	}
 
 	// Obtener la dirección
 	start_bf = strtoul(bf_start, &endptr, 16);
 	end_bf = strtoul(bf_end, &endptr, 16);
 	data_bf = strtoul(bf_data, &endptr, 16);
-	
+
 	// Validar rango
-	if (start_bf >= end_bf) {
-			USART_putString("Invalid Range. Start > End \n\r");
-			return;
+	if (start_bf >= end_bf)
+	{
+		USART_putString("Invalid Range. Start > End \n\r");
+		return;
 	}
-	
+
 	// Convertir bf_data a int para el memset
 	int data_value = strtol(bf_data, NULL, 16);
-	
+
 	// Llenar bloque de memoria desde inicio a fin con memset
 	block_size = end_bf - start_bf;
 	memset((void *)start_bf, data_value, block_size);
@@ -542,76 +545,83 @@ void I2C_config()
 	// I2C1->CR1 |= I2C_CR1_TXIE | I2C_CR1_RXIE;
 	I2C1->CR1 |= I2C_CR1_PE;
 
-	I2C_Write(SLAVE_ADDR,0x00,0x00); //IODIRA (7-0 AS OUTPUT)
-	I2C_Write(SLAVE_ADDR,0x01,0xf0); //IODIRB (7-4 AS INPUTS, 3-0 AS OUTPUT)
-	I2C_Write(SLAVE_ADDR,0x0d,0xf0); //PULL UP B (7-4 WITH PULL-UP)
-	I2C_Write(SLAVE_ADDR,0x12,0x3f); //PORTA REGISTER (Escribimos cero)
-	I2C_Write(SLAVE_ADDR,0x13,0x0f); //PORTB REGISTER (Encendemos Digit 1, 2, 3 y 4)
-	
-	SysTick_Config(SystemCoreClock/1000);
+	I2C_Write(SLAVE_ADDR, 0x00, 0x00); // IODIRA (7-0 AS OUTPUT)
+	I2C_Write(SLAVE_ADDR, 0x01, 0xf0); // IODIRB (7-4 AS INPUTS, 3-0 AS OUTPUT)
+	I2C_Write(SLAVE_ADDR, 0x0d, 0xf0); // PULL UP B (7-4 WITH PULL-UP)
+	I2C_Write(SLAVE_ADDR, 0x12, 0x3f); // PORTA REGISTER (Escribimos cero)
+	I2C_Write(SLAVE_ADDR, 0x13, 0x0f); // PORTB REGISTER (Encendemos Digit 1, 2, 3 y 4)
 
+	SysTick_Config(SystemCoreClock / 1000);
 }
 
-
-int getDigit(int num, int position) {
-    int pow10 = 1;
+int getDigit(int num, int position)
+{
+	int pow10 = 1;
 	int length = 1 + (int)log10(num);
 	int i = length - 1;
-	
-    for (i = length -1;  i > position; --i) {
-        pow10 *= 10;
-    }
-    return (num / pow10) % 10;
+
+	for (i = length - 1; i > position; --i)
+	{
+		pow10 *= 10;
+	}
+	return (num / pow10) % 10;
 }
 
 void SysTick_Handler(void)
 {
 	ticks++;
-	
-	if(segmentFlag == 1 ){
+
+	if (segmentFlag == 1)
+	{
 		return;
 	}
-	
-	I2C_Write(SLAVE_ADDR,0x13,0x00); //PORTB REGISTER (Apagamos todos los Digit)
+
+	I2C_Write(SLAVE_ADDR, 0x13, 0x00);										// PORTB REGISTER (Apagamos todos los Digit)
 	if ((strcmp(intNumber, "0") == 0) && (strcmp(decimalNumber, "0") == 0)) // Colocamos 0 en los 4 digitos
 	{
-		I2C_Write(SLAVE_ADDR,0x12,0x3f); //PORTA REGISTER (Escribimos cero)
-		I2C_Write(SLAVE_ADDR,0x13,0x0f); //PORTB REGISTER (Encendemos Digit 1, 2, 3 y 4)
-	} else { // Imprimimos en los 4 digitos del display
-		if (digitN == 4) {
+		I2C_Write(SLAVE_ADDR, 0x12, 0x3f); // PORTA REGISTER (Escribimos cero)
+		I2C_Write(SLAVE_ADDR, 0x13, 0x0f); // PORTB REGISTER (Encendemos Digit 1, 2, 3 y 4)
+	}
+	else
+	{ // Imprimimos en los 4 digitos del display
+		if (digitN == 4)
+		{
 			digitN = 0;
 		}
-		
 
-		if (digitN < intNumberi) { // print de parte entera
-			
-			int value = getDigit(intNumberINT, digitN); 
-			I2C_Write(SLAVE_ADDR,0x12,hexNumberDisplay(value)); //PORTA REGISTER (Escribimos el numero codificado)
-			
-			//I2C_Write(SLAVE_ADDR,0x12,hexNumberDisplay(&intNumber[digitN])); //PORTA REGISTER (Escribimos el numero codificado)
-			if (digitN+1 == intNumberi) { // //PORTA REGISTER (encender el punto decimal)
-				I2C_Write(SLAVE_ADDR,0x12,hexNumberDisplay(value) | (1<<7)); //PORTA REGISTER (Escribimos el numero codificado con el punto decimal)
+		if (digitN < intNumberi)
+		{ // print de parte entera
+
+			int value = getDigit(intNumberINT, digitN);
+			I2C_Write(SLAVE_ADDR, 0x12, hexNumberDisplay(value)); // PORTA REGISTER (Escribimos el numero codificado)
+
+			// I2C_Write(SLAVE_ADDR,0x12,hexNumberDisplay(&intNumber[digitN])); //PORTA REGISTER (Escribimos el numero codificado)
+			if (digitN + 1 == intNumberi)
+			{																	 // //PORTA REGISTER (encender el punto decimal)
+				I2C_Write(SLAVE_ADDR, 0x12, hexNumberDisplay(value) | (1 << 7)); // PORTA REGISTER (Escribimos el numero codificado con el punto decimal)
 			}
-		} else if (digitN < (decimalNumberi + intNumberi) ) { // print de parte decimal
-			
-			int value = getDigit(decimalNumberINT, digitN-intNumberi); 
-			I2C_Write(SLAVE_ADDR,0x12, hexNumberDisplay(value)); //PORTA REGISTER (Escribimos el numero codificado)
-			
-			
-			//I2C_Write(SLAVE_ADDR,0x12,hexNumberDisplay(&decimalNumber[digitN - intNumberi])); //PORTA REGISTER (Escribimos el numero codificado)
-		} else { // print de ceros para llenar el display
-			I2C_Write(SLAVE_ADDR,0x12,0x5b); //PORTA REGISTER (Escribimos cero)
 		}
-		//strcpy( digitDisplay, "" );
-		//digitDisplay = (char *) digitN+1;
-		I2C_Write(SLAVE_ADDR,0x13,hexDigitDisplay(digitN+1)); //PORTB REGISTER (Encendemos Digit correspondiente)	
+		else if (digitN < (decimalNumberi + intNumberi))
+		{ // print de parte decimal
+
+			int value = getDigit(decimalNumberINT, digitN - intNumberi);
+			I2C_Write(SLAVE_ADDR, 0x12, hexNumberDisplay(value)); // PORTA REGISTER (Escribimos el numero codificado)
+
+			// I2C_Write(SLAVE_ADDR,0x12,hexNumberDisplay(&decimalNumber[digitN - intNumberi])); //PORTA REGISTER (Escribimos el numero codificado)
+		}
+		else
+		{									   // print de ceros para llenar el display
+			I2C_Write(SLAVE_ADDR, 0x12, 0x5b); // PORTA REGISTER (Escribimos cero)
+		}
+		// strcpy( digitDisplay, "" );
+		// digitDisplay = (char *) digitN+1;
+		I2C_Write(SLAVE_ADDR, 0x13, hexDigitDisplay(digitN + 1)); // PORTB REGISTER (Encendemos Digit correspondiente)
 		digitN++;
 	}
 
 	// I2C_Write(SLAVE_ADDR,0x12,(ticks%16)); //PORTA REGISTER
 	// I2C_Read(SLAVE_ADDR,0x12,&data_i2c);
 }
-
 
 void I2C_Write(char slave, char addr, char data_i2c)
 {
@@ -645,8 +655,9 @@ void I2C_Read(char slave, char addr, char *data_i2c)
 	*data_i2c = I2C1->RXDR;
 }
 
-void segmentOut(){
-	
+void segmentOut()
+{
+
 	segmentFlag = 1;
 	USART_putString("\n\r\n\r Executing Segment Out...\n\r\n\r");
 	if ((strcmp(args[1], " ") != 0))
@@ -659,7 +670,7 @@ void segmentOut(){
 		USART_putString("\n\r\n\r Number parameter is mising\n\r"); // Verificar que no existan argumentos
 		return;
 	}
-	
+
 	intNumber = strtok(args[0], ".");
 	decimalNumber = strtok(NULL, "");
 
@@ -692,24 +703,26 @@ void segmentOut(){
 			decimalNumber = (char *)&subtext;
 		}
 	}
-	
+
 	char *output;
-  intNumberINT = strtol(intNumber, &output, 10);
-  decimalNumberINT = strtol(decimalNumber, &output, 10);
-	
-	for (intNumberi = 0; intNumber[intNumberi] != '\0'; ++intNumberi);
-	for (decimalNumberi = 0; decimalNumber[decimalNumberi] != '\0'; ++decimalNumberi);
+	intNumberINT = strtol(intNumber, &output, 10);
+	decimalNumberINT = strtol(decimalNumber, &output, 10);
+
+	for (intNumberi = 0; intNumber[intNumberi] != '\0'; ++intNumberi)
+		;
+	for (decimalNumberi = 0; decimalNumber[decimalNumberi] != '\0'; ++decimalNumberi)
+		;
 
 	sprintf(buffer, " Display decimal number %s.%s", intNumber, decimalNumber);
 	USART_putString(buffer);
-	//sprintf(buffer, " >>>>>>Display decimal number %d.%d", intNumberINT, decimalNumberINT);
-	//USART_putString(buffer);
+	// sprintf(buffer, " >>>>>>Display decimal number %d.%d", intNumberINT, decimalNumberINT);
+	// USART_putString(buffer);
 	USART_putString("\n\r");
 	segmentFlag = 0;
-		
 }
 
-char hexNumberDisplay(int num){
+char hexNumberDisplay(int num)
+{
 	if (num == 0)
 	{
 		return 0x3f;
@@ -717,19 +730,19 @@ char hexNumberDisplay(int num){
 	else if (num == 1)
 	{
 		return 0x06;
-	} 
+	}
 	else if (num == 2)
 	{
 		return 0x5b;
-	} 
+	}
 	else if (num == 3)
 	{
 		return 0x4f;
-	} 
+	}
 	else if (num == 4)
 	{
 		return 0x66;
-	} 
+	}
 	else if (num == 5)
 	{
 		return 0x6d;
@@ -737,11 +750,11 @@ char hexNumberDisplay(int num){
 	else if (num == 6)
 	{
 		return 0x7c;
-	} 
+	}
 	else if (num == 7)
 	{
 		return 0x07;
-	} 
+	}
 	else if (num == 8)
 	{
 		return 0x7f;
@@ -752,7 +765,8 @@ char hexNumberDisplay(int num){
 	}
 }
 
-char hexDigitDisplay(int num){
+char hexDigitDisplay(int num)
+{
 	if (num == 1)
 	{
 		return 0x08;
@@ -760,7 +774,7 @@ char hexDigitDisplay(int num){
 	else if (num == 2)
 	{
 		return 0x04;
-	} 
+	}
 	else if (num == 3)
 	{
 		return 0x02;
