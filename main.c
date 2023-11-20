@@ -93,7 +93,11 @@ static char *bf_start;
 static char *bf_end;
 static char *bf_data;
 static char *bf_size;
-int size_bf = 0;
+int size_bf = 1;
+unsigned long start_bf;
+unsigned long end_bf;
+unsigned long data_bf;
+static size_t block_size;
 
 int main(void)
 {
@@ -369,13 +373,6 @@ void memoryDisplay(void)
 		end = DEFAULT_END_ADDRESS;
 	}
 
-	USART_putString("Start Address: ");
-	USART_putString(start);
-	USART_putString("\n\r");
-	USART_putString("End Address: ");
-	USART_putString(end);
-	USART_putString("\n\r\n\r");
-
 	// Convertir HEX a sin signo
 	start_memory_display = strtoul(start, &endptr, 16);
 	end_memory_display = strtoul(end, &endptr, 16);
@@ -448,44 +445,49 @@ void memoryModify()
 	USART_putString("\n\r\n\r Memory Modify OK...\n\r\n\r");
 }
 
-void blockFill()
+void blockFill() 
 {
 	USART_putString("\n\r\n\r Executing Block Fill...\n\r\n\r");
 
 	// Verificar argumentos
-	if (args[0] == NULL || args[1] == NULL || args[2] == NULL || args[3] == NULL)
-	{
-		USART_putString("Arguments Missing. Command: BF start end data [size]\n\r");
-		return;
+	if ((strcmp(args[0], " ") == 0) || (strcmp(args[1], " ") == 0) || (strcmp(args[2], " ") == 0) || (strcmp(args[3], " ") == 0)) {
+			USART_putString("Arguments Missing. Command: BF start end data [size]\n\r");
+			return;
 	}
 
-	unsigned long bf_start_ul = strtoul(args[0], &endptr, 16);
-	unsigned long bf_end_ul = strtoul(args[1], &endptr, 16);
-	unsigned long bf_data_ul = strtoul(args[2], &endptr, 16);
-
-	bf_start = (char *)bf_start_ul;
-	bf_end = (char *)bf_end_ul;
-	bf_data = (char *)bf_data_ul;
-
-	sscanf(bf_size, "%d", &size_bf);
+	bf_start = args[0];
+	bf_end = args[1];
+	bf_data = args[2];
+	bf_size = args[3];
+	
+	// Tomar el contenido de args[3] y transformarlo
+	sscanf(bf_size, "%u", &size_bf);
 
 	// Verificar el tamaño válido (1, 2 o 4 bytes)
-	if (size_bf != 1 && size_bf != 2 && size_bf != 4)
-	{
-		USART_putString("Incorrect Size. Sizes: 1, 2 o 4 bytes.\n\r");
-		return;
+	if (size_bf != 1 && size_bf != 2 && size_bf != 4) {
+			USART_putString("Incorrect Size. Sizes: 1, 2 o 4 bytes.\n\r");
+			return;
 	}
 
+	// Obtener la dirección
+	start_bf = strtoul(bf_start, &endptr, 16);
+	end_bf = strtoul(bf_end, &endptr, 16);
+	data_bf = strtoul(bf_data, &endptr, 16);
+	
 	// Validar rango
-	if (bf_start >= bf_end)
-	{
-		USART_putString("Invalid Range. start to eq\n\r");
-		return;
+	if (start_bf >= end_bf) {
+			USART_putString("Invalid Range. Start > End \n\r");
+			return;
 	}
+	
+	// Convertir bf_data a int para el memset
+	int data_value = strtol(bf_data, NULL, 16);
+	
+	// Llenar bloque de memoria desde inicio a fin con memset
+	block_size = end_bf - start_bf;
+	memset((void *)start_bf, data_value, block_size);
 
-	// Implementar memset: Llenar bloque de memoria desde inicio a fin
-	size_t block_size = bf_end - bf_start;
-	memset((void *)bf_start, (unsigned int)(*bf_data), block_size);
+	USART_putString("\n\r\n\r Block Fill OK...\n\r\n\r");
 }
 
 void runCommand()
